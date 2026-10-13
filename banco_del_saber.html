@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banco del Saber</title>
+<style>
+:root{--bg:#0f2e2a;--panel:#16413b;--ink:#f6f1e1;--mut:#a9c4bb;--gold:#f2b705;--gold2:#ffd95a;--ok:#5fd38d;--bad:#ff6b5e;--line:#2b5c53}
+@media(prefers-color-scheme:light){:root{--bg:#eef3ea;--panel:#fff;--ink:#12302b;--mut:#4d6b63;--line:#c9d9cf;--gold:#c98f00;--gold2:#e0a800}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,'Palatino Linotype',serif}
+button{font:inherit;cursor:pointer;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--line);padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+h1{margin:0;font-size:1.4rem;letter-spacing:.5px}
+.wallet{margin-left:auto;display:flex;gap:10px;align-items:center}
+.coins{background:var(--gold);color:#2a1d00;border-radius:30px;padding:4px 14px;font-weight:700;font-family:system-ui,sans-serif}
+.coins.bump{animation:b .4s}@keyframes b{50%{transform:scale(1.25)}}
+.rank{font:600 .85rem system-ui,sans-serif;color:var(--mut)}
+.bar{height:6px;background:var(--line);border-radius:4px;width:100%;overflow:hidden}.bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .5s}
+main{max-width:920px;margin:0 auto;padding:18px 16px 60px}
+.modes{display:flex;gap:8px;margin-bottom:14px}
+.modes button{flex:1;padding:10px;border:2px solid var(--line);background:var(--panel);border-radius:10px;font-weight:700}
+.modes button.on{border-color:var(--gold);background:var(--gold);color:#2a1d00}
+.areas{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px}
+.areas button{white-space:nowrap;border:2px solid var(--line);background:transparent;border-radius:20px;padding:5px 14px;font:600 .85rem system-ui,sans-serif}
+.areas button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{perspective:900px;height:300px;margin:10px 0}
+.in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+.card.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:24px;display:flex;flex-direction:column;justify-content:center;border:3px dashed var(--gold);background:var(--panel);overflow:auto}
+.back{transform:rotateY(180deg);background:var(--gold);color:#2a1d00;border-style:solid}
+.face small{font:600 .8rem system-ui,sans-serif;color:var(--mut)}.back small{color:#5a4300}
+.face h2{margin:6px 0;font-size:1.9rem}.hint{font:.9rem system-ui,sans-serif}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.btn{border:2px solid var(--line);background:var(--panel);padding:9px 18px;border-radius:10px;font-weight:700;font-family:system-ui,sans-serif}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#2a1d00}
+.cnt{text-align:center;color:var(--mut);font:.9rem system-ui,sans-serif}
+.q{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:20px}
+.q p{font-size:1.1rem;margin:4px 0 14px}.meta{display:flex;justify-content:space-between;font:600 .85rem system-ui,sans-serif;color:var(--mut);margin-bottom:8px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border-radius:10px;border:2px solid var(--line);background:transparent;font-family:system-ui,sans-serif;font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--gold)}.opt.ok{background:var(--ok);color:#06220f;border-color:var(--ok)}.opt.no{background:var(--bad);color:#2b0500;border-color:var(--bad)}
+.fb{min-height:1.5em;font:600 .95rem system-ui,sans-serif;margin-top:8px}
+.end{text-align:center;padding:30px}.end .big{font-size:3rem}
+.pop{position:fixed;pointer-events:none;font:700 1.4rem system-ui;color:var(--gold2);animation:up 1s forwards;z-index:9}
+@keyframes up{to{transform:translateY(-70px);opacity:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button:focus-visible{outline:3px solid var(--gold2);outline-offset:2px}
+</style></head><body>
+<header><h1>🏦 Banco del Saber</h1>
+<div class="wallet"><span class="rank" id="rank"></span><span class="coins" id="coins">🪙 0</span></div>
+<div class="bar"><i id="prog"></i></div></header>
+<main>
+<div class="modes"><button id="mC" class="on">📇 Tarjetas</button><button id="mQ">🎯 Reto</button></div>
+<div class="areas" id="areas"></div>
+<section id="view"></section>
+</main>
+<script>
+const D=[
+["Contabilidad","Activo","Recurso con valor económico controlado por una persona o empresa, del cual se esperan beneficios futuros."],
+["Contabilidad","Pasivo","Obligación presente de la entidad, surgida de sucesos pasados, que implica entregar recursos con beneficios económicos para cancelarla."],
+["Contabilidad","Libro mayor","Registro contable donde se agrupan, clasifican y resumen cronológicamente las operaciones de cada cuenta (caja, bancos, clientes)."],
+["Contabilidad","Patrimonio","Conjunto de bienes, derechos y obligaciones con valor económico de una persona o entidad. Para Rafael Rojina Villegas es la diferencia entre activos y pasivos."],
+["Contabilidad","Factura","Documento mercantil y fiscal que detalla la compraventa de un bien o servicio; debe proceder de un emisor identificado."],
+["Gestión financiera","Gestión financiera","Según James Van Horne: adquisición, financiamiento y administración de activos para alcanzar un objetivo. Busca maximizar la riqueza de los accionistas."],
+["Gestión financiera","Control financiero","Según Robert Anthony: proceso con el que los administradores aseguran que los recursos se obtienen y usan con eficacia y eficiencia. Evalúa desviaciones frente al presupuesto."],
+["Gestión financiera","Capital de trabajo","Según Gitman y Zutter: inversión en activos a corto plazo (efectivo, valores, cuentas por cobrar, inventarios). Garantiza la liquidez diaria."],
+["Gestión financiera","Apalancamiento financiero","Según Pandey: uso de fondos con costo fijo (deuda, acciones preferentes) para magnificar las ganancias por acción."],
+["Gestión financiera","Planificación financiera","Según Benton Gup: establecer objetivos y acciones para anticipar necesidades de fondos y la estructura de capital."],
+["Emprendimiento","Emprendedor","Según Stephen Harper: persona capaz de revelar oportunidades y con habilidades para desarrollar un nuevo concepto de negocio."],
+["Emprendimiento","Emprendimiento","Según Roberts et al. (2006): proceso en que se persiguen oportunidades sin importar los recursos que se controlan actualmente."],
+["Emprendimiento","Innovación en el emprendimiento","Según Daniel Jennings: capacidad de combinar los factores de producción existentes para obtener los mejores resultados."],
+["Emprendimiento","Creación de valor","Según Vestergaard et al. (2012): transformar oportunidades e ideas en valor comercial, cultural o social para los demás."],
+["Emprendimiento","Optimización de recursos","Según Morris y Kuratko: usar los recursos en combinaciones que maximizan resultados y agregar valor a cada proceso."],
+["Tributaria","Tributo","Según Héctor Villegas: obligación de pagar una prestación en dinero a un ente público, que nace de la ley. Incluye impuestos, tasas y contribuciones especiales."],
+["Tributaria","Impuesto","Según Giannini: pago exigido por el Estado sin beneficio directo e inmediato a cambio (ej. Impuesto a la Renta, IVA) para financiar el gasto público."],
+["Tributaria","Hecho imponible","Según Dino Jarach: presupuesto fijado por la ley cuya realización origina la obligación tributaria (ej. ganar un sueldo)."],
+["Tributaria","Sujeto pasivo","Según Valdés Costa: persona natural o jurídica obligada por ley a cumplir la prestación tributaria, como contribuyente o sustituto."],
+["Tributaria","Base imponible","Según Ferreiro Lapatza: magnitud que cuantifica la capacidad económica y sobre la cual se aplica la alícuota para hallar la deuda tributaria."],
+["Lengua","Sustantivo","Palabra variable que nombra personas, animales, objetos, lugares o ideas. Es núcleo del sujeto."],
+["Lengua","Adjetivo","Palabra que acompaña al sustantivo para calificarlo; concuerda con él en género y número."],
+["Lengua","Verbo","Palabra que expresa acción, estado o proceso y varía en tiempo, modo y persona. Es núcleo del predicado."],
+["Lengua","Morfema","Unidad mínima con significado de la lengua; puede ser derivativo o flexivo (género, número, tiempo)."],
+["Lengua","Sintaxis","Parte de la gramática que estudia cómo se combinan las palabras para formar oraciones con sentido."],
+["Herramientas","ERP","Enterprise Resource Planning: unifica contabilidad, inventario, compras y recursos humanos en una sola plataforma."],
+["Herramientas","CRM","Customer Relationship Management: gestiona y da seguimiento a las interacciones con clientes actuales y potenciales."],
+["Herramientas","BI","Business Intelligence: herramientas que transforman datos en bruto en información útil; crean tableros y reportes visuales."],
+["Herramientas","SCM","Supply Chain Management: planifica y controla el flujo de bienes, información y servicios del proveedor al cliente final."],
+["Herramientas","Cloud Computing","Servicio que provee almacenamiento y procesamiento de datos por internet, sin depender de un disco duro local."]
+].map(([a,t,d])=>({a,t,d}));
+const AREAS=["Todas",...new Set(D.map(x=>x.a))];
+const RANKS=[[0,"🐷 Ahorrista"],[40,"💼 Inversionista"],[120,"🏦 Banquero"],[250,"👑 Magnate"]];
+let S={coins:0,known:[]};try{S=Object.assign(S,JSON.parse(localStorage.getItem("bds")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("bds",JSON.stringify(S))}catch(e){}};
+let mode="C",area="Todas",pool=[],i=0,q=null;
+const $=id=>document.getElementById(id),V=$("view");
+const shuf=a=>[...a].sort(()=>Math.random()-.5);
+function pop(t,e){const p=document.createElement("div");p.className="pop";p.textContent=t;const r=(e?e.target:document.body).getBoundingClientRect();p.style.left=(r.left+r.width/2-20)+"px";p.style.top=r.top+"px";document.body.appendChild(p);setTimeout(()=>p.remove(),1000)}
+function add(n,e){S.coins+=n;save();hud();pop("+"+n+" 🪙",e);const c=$("coins");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump")}
+function hud(){$("coins").textContent="🪙 "+S.coins;let r=RANKS[0],nx=null;RANKS.forEach((x,k)=>{if(S.coins>=x[0]){r=x;nx=RANKS[k+1]}});
+$("rank").textContent=r[1]+(nx?" · próximo: "+nx[0]:"");$("prog").style.width=(nx?(S.coins-r[0])/(nx[0]-r[0])*100:100)+"%"}
+function filt(){return D.filter(x=>area=="Todas"||x.a==area)}
+function tabs(){$("areas").innerHTML=AREAS.map(a=>`<button class="${a==area?"on":""}" data-a="${a}">${a}</button>`).join("");
+document.querySelectorAll("#areas button").forEach(b=>b.onclick=()=>{area=b.dataset.a;tabs();start()})}
+function start(){pool=shuf(filt());i=0;q={n:0,ok:0,streak:0};mode=="C"?card():quiz()}
+function card(){const x=pool[i],k=S.known.includes(x.t);
+V.innerHTML=`<div class="cnt">${i+1} / ${pool.length}${k?" · ✅ dominado":""}</div>
+<div class="card" id="cd"><div class="in"><div class="face"><small>${x.a}</small><h2>${x.t}</h2><span class="hint">Toca para ver la definición</span></div>
+<div class="face back"><small>${x.t}</small><p>${x.d}</p></div></div></div>
+<div class="row"><button class="btn" id="pv">◀</button><button class="btn gold" id="kn">Ya lo sé +2 🪙</button><button class="btn" id="nx">▶</button></div>`;
+$("cd").onclick=()=>$("cd").classList.toggle("flip");
+$("pv").onclick=()=>{i=(i-1+pool.length)%pool.length;card()};$("nx").onclick=()=>{i=(i+1)%pool.length;card()};
+$("kn").onclick=e=>{if(!S.known.includes(x.t)){S.known.push(x.t);add(2,e)}else pop("Ya cobraste esta",e);setTimeout(()=>{i=(i+1)%pool.length;card()},500)}}
+function quiz(){
+if(i>=Math.min(10,pool.length)){const p=Math.round(q.ok/i*100);
+V.innerHTML=`<div class="q end"><div class="big">${p>=80?"🏆":p>=50?"💰":"📚"}</div><h2>${q.ok} de ${i} correctas</h2><p>${p>=80?"¡Excelente inversión de estudio!":p>=50?"Buen avance, sigue acumulando.":"Repasa las tarjetas y vuelve a intentarlo."}</p><button class="btn gold" id="re">Nuevo reto</button></div>`;
+if(p==100)add(10,null);$("re").onclick=start;return}
+const x=pool[i],others=shuf((area=="Todas"?D:D.filter(y=>y.a==x.a)).filter(y=>y!=x)).slice(0,3);
+const opts=shuf([x,...others]);
+V.innerHTML=`<div class="q"><div class="meta"><span>Pregunta ${i+1}/${Math.min(10,pool.length)}</span><span>🔥 Racha ${q.streak}</span></div>
+<p>¿Qué término corresponde a esta definición?<br><b>«${x.d.replace(/^Según [^:]+: /,"")}»</b></p>
+${opts.map(o=>`<button class="opt" data-t="${o.t}">${o.t}</button>`).join("")}<div class="fb" id="fb"></div></div>`;
+document.querySelectorAll(".opt").forEach(b=>b.onclick=e=>{const ok=b.dataset.t==x.t;
+document.querySelectorAll(".opt").forEach(o=>{o.disabled=true;if(o.dataset.t==x.t)o.classList.add("ok")});
+if(ok){q.ok++;q.streak++;const g=5+(q.streak>1?q.streak:0);add(g,e);$("fb").textContent="¡Correcto! +"+g+" monedas"}
+else{q.streak=0;b.classList.add("no");$("fb").textContent="Era: "+x.t+". Repásalo en las tarjetas."}
+setTimeout(()=>{i++;quiz()},1500)})}
+$("mC").onclick=()=>{mode="C";$("mC").classList.add("on");$("mQ").classList.remove("on");start()};
+$("mQ").onclick=()=>{mode="Q";$("mQ").classList.add("on");$("mC").classList.remove("on");start()};
+tabs();hud();start();
+</script></body></html>
